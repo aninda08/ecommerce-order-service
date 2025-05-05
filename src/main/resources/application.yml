@@ -1,0 +1,14 @@
+spring:
+    datasource:
+        url: jdbc:postgresql://${POSTGRES_CONNECTION_URL:localhost:5432}/${POSTGRES_DATABASE:order_db}?ssl=${DBCONNECTION_SSL_ENABLE:false}&&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory
+        username: ${POSTGRES_USERNAME:postgres}
+        password: ${POSTGRES_PASSWORD:changeme}
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        show-sql: false
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        hibernate:
+            naming:
+                implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+                physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+            ddl-auto: none
