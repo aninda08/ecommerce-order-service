@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import com.ecommerce.ecommerce_order_service.entity.OrderEntity;
 import com.ecommerce.ecommerce_order_service.entity.OrderItemEntity;
 import com.ecommerce.ecommerce_order_service.exception.DetailsNotFoundException;
-import com.ecommerce.ecommerce_order_service.feign.OrderInterface;
+import com.ecommerce.ecommerce_order_service.feign.ProductInterface;
 import com.ecommerce.ecommerce_order_service.model.Item;
 import com.ecommerce.ecommerce_order_service.model.PaymentStatus;
 import com.ecommerce.ecommerce_order_service.model.ProductItem;
@@ -35,7 +35,10 @@ public class OrderService {
     private OrderItemRepository orderItemRepository;
 
     @Autowired
-    private OrderInterface orderInterface;
+    private ProductInterface productInterface;
+
+    @Autowired
+    private SqsService sqsService;
 
     public ResponseEntity<List<OrderResponse>> getAllOrders() {
         List<OrderEntity> orders = orderRepository.findAllOrder();
@@ -85,7 +88,7 @@ public class OrderService {
         OrderEntity savedOrder = orderRepository.save(orderEntity);
 
         for (ProductItem product : orderRequest.getProducts()) {
-            ProductRequest productEntity = orderInterface.getProductById(product.getProductId()).getBody();
+            ProductRequest productEntity = productInterface.getProductById(product.getProductId()).getBody();
             if (productEntity == null) {
                 continue;
             }
@@ -95,6 +98,7 @@ public class OrderService {
             OrderItemEntity orderItem = new OrderItemEntity();
             orderItem.setOrderId(savedOrder.getId());
             orderItem.setProductId(product.getProductId());
+            orderItem.setProductName(productEntity.getName());
             orderItem.setQuantity(product.getQuantity());
             orderItem.setUpdatedBy("Admin");
             orderItem.setTotalPrice(totalPrice);
@@ -107,6 +111,8 @@ public class OrderService {
 
         savedOrder.setTotalAmount(totalAmount);
         orderRepository.save(savedOrder);
+
+        sqsService.sendPurchaseOrderDetails(orderRequest);
 
         return new ResponseEntity<>(new SuccessResponse("Order created successfully", "success"), HttpStatus.OK);
     }
@@ -170,7 +176,7 @@ public class OrderService {
                 totalAmount += (product.getQuantity() * orderItem.get(0).getUnitPrice());
             } else {
 
-                ProductRequest productEntity = orderInterface.getProductById(product.getProductId()).getBody();
+                ProductRequest productEntity = productInterface.getProductById(product.getProductId()).getBody();
                 if (productEntity == null) {
                     continue;
                 }
@@ -180,6 +186,7 @@ public class OrderService {
                 OrderItemEntity newOrder = new OrderItemEntity();
                 newOrder.setOrderId(orderEntity.getId());
                 newOrder.setProductId(product.getProductId());
+                newOrder.setProductName(productEntity.getName());
                 newOrder.setQuantity(product.getQuantity());
                 newOrder.setUpdatedBy("Admin");
                 newOrder.setUnitPrice(productEntity.getPrice());

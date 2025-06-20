@@ -1,0 +1,16 @@
+{
+    "id": 1,
+    "orderNumber": "123456789",
+    "customerId": 1,
+    "paymentMode": "CASH",
+    "paymentStatus": "PAID",
+    "shippingAddress": "123 Main St, Anytown, USA",
+    "products": [
+        {
+            "id": 1,
+            "name": "Product 1",
+            "price": 10.0,
+            "quantity": 1
+        }
+    ]
+}

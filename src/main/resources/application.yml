@@ -12,3 +12,12 @@ spring:
                 implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
                 physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
             ddl-auto: none
+aws:
+  region: us-east-1
+  s3:
+    purchase-order-bucket: purchase-order-bucket
+    endpoint: http://localhost:4566
+  sqs:
+    endpoint: http://localhost:4566
+    purchase-order-queue-group: purchase-order
+    purchase-order-queue-name: purchase-order-queue.fifo
