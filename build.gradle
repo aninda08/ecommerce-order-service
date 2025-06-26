@@ -37,11 +37,14 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	// implementation 'com.amazonaws:aws-java-sdk-s3:1.12.680'
 	implementation 'software.amazon.awssdk:s3:2.23.10'
 	implementation 'software.amazon.awssdk:auth:2.23.10'
 	implementation 'software.amazon.awssdk:sqs:2.23.10'
+	implementation 'software.amazon.awssdk:sns:2.23.10'
 	implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+	implementation 'software.amazon.awssdk:ssm:2.23.10'
+    implementation 'software.amazon.awssdk:secretsmanager:2.23.10'
+	implementation 'org.springframework.kafka:spring-kafka:3.3.0'
 }
 
 dependencyManagement {

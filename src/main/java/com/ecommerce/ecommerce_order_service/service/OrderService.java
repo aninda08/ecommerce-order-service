@@ -38,7 +38,7 @@ public class OrderService {
     private ProductInterface productInterface;
 
     @Autowired
-    private SqsService sqsService;
+    private SnsService snsService;
 
     public ResponseEntity<List<OrderResponse>> getAllOrders() {
         List<OrderEntity> orders = orderRepository.findAllOrder();
@@ -112,7 +112,7 @@ public class OrderService {
         savedOrder.setTotalAmount(totalAmount);
         orderRepository.save(savedOrder);
 
-        sqsService.sendPurchaseOrderDetails(orderRequest);
+        snsService.publish(orderRequest);
 
         return new ResponseEntity<>(new SuccessResponse("Order created successfully", "success"), HttpStatus.OK);
     }

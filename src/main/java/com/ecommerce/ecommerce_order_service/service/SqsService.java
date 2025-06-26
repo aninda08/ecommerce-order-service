@@ -13,12 +13,17 @@ import org.springframework.stereotype.Service;
 
 import com.ecommerce.ecommerce_order_service.exception.CustomErrorCode;
 import com.ecommerce.ecommerce_order_service.exception.OrderServiceException;
+import com.ecommerce.ecommerce_order_service.model.SNSMessage;
 import com.ecommerce.ecommerce_order_service.request.OrderRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import software.amazon.awssdk.services.sns.model.SubscribeRequest;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
+import software.amazon.awssdk.services.sqs.model.SetQueueAttributesRequest;
+import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
+import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -29,6 +34,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 @Service
 public class SqsService {
     private final SqsClient sqsClient;
+    private final SnsService snsService;
 
     @Value("${aws.sqs.purchase-order-queue-name}")
     private String purchaseOrderQueueName;
@@ -37,16 +43,28 @@ public class SqsService {
     private String purchaseOrderQueueGroup;
 
     private String purchaseOrderQueueUrl;
+    private String purchaseOrderQueueArn;
 
     @Autowired
     private PurchaseOrderService purchaseOrderService;
 
-    public SqsService(SqsClient sqsClient) {
+    
+
+    public SqsService(SqsClient sqsClient, SnsService snsService) {
         this.sqsClient = sqsClient;
+        this.snsService = snsService;
     }
 
     @PostConstruct
     public void init() {
+        createQueue();
+
+        setQueuePolicy();
+
+        subscribeQueueToTopic();
+    }
+
+    private void createQueue() {
         Map<QueueAttributeName, String> attributes = new HashMap<>();
         attributes.put(QueueAttributeName.FIFO_QUEUE, "true");
         attributes.put(QueueAttributeName.CONTENT_BASED_DEDUPLICATION, "true");
@@ -62,6 +80,48 @@ public class SqsService {
         purchaseOrderQueueUrl = queueUrlResponse.queueUrl();
     }
 
+    private void setQueuePolicy() {
+        purchaseOrderQueueArn = sqsClient.getQueueAttributes(GetQueueAttributesRequest.builder()
+                .queueUrl(purchaseOrderQueueUrl)
+                .attributeNames(QueueAttributeName.QUEUE_ARN).build())
+                .attributes().get(QueueAttributeName.QUEUE_ARN);
+
+        // Set policy to allow SNS to send messages to SQS
+        String policy = String.format("""
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": "*",
+                  "Action": "sqs:SendMessage",
+                  "Resource": "%s",
+                  "Condition": {
+                    "ArnEquals": {
+                      "aws:SourceArn": "%s"
+                    }
+                  }
+                }
+              ]
+            }
+        """, purchaseOrderQueueArn, snsService.getTopicArn());
+
+        sqsClient.setQueueAttributes(SetQueueAttributesRequest.builder()
+                .queueUrl(purchaseOrderQueueUrl)
+                .attributes(Map.of(QueueAttributeName.POLICY, policy))
+                .build());
+
+    }
+
+    private void subscribeQueueToTopic() {
+        snsService.getTopicArn(); // ensure topic is created
+        snsService.getSnsClient().subscribe(SubscribeRequest.builder()
+                .topicArn(snsService.getTopicArn())
+                .protocol("sqs")
+                .endpoint(purchaseOrderQueueArn)
+                .build());
+    }
+    
     public void sendPurchaseOrderDetails(OrderRequest purchaseOrderDetails) {
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -100,9 +160,12 @@ public class SqsService {
         try {
             ObjectMapper mapper = new ObjectMapper();
             List<Message> messages = receivePurchaseOrderDetails();
+            System.out.println("📥 Received messages size: " + messages.size());
             for (Message message : messages) {
                 System.out.println("📥 Received: " + message.body());
-                OrderRequest purchaseOrderDetails = mapper.readValue(message.body(), OrderRequest.class);
+                SNSMessage purchaseOrderDetailsRaw = mapper.readValue(message.body(), SNSMessage.class);
+                System.out.println("📥 Received message: " + purchaseOrderDetailsRaw.getMessage());
+                OrderRequest purchaseOrderDetails = mapper.readValue(purchaseOrderDetailsRaw.getMessage(), OrderRequest.class);
                 // Process the message
                 processPurchaseOrderDetails(purchaseOrderDetails);
 
