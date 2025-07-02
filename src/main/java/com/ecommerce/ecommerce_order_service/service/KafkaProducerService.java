@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import com.ecommerce.ecommerce_order_service.constants.Constants;
 import com.ecommerce.ecommerce_order_service.model.UserMessage;
 
 @Service
@@ -13,6 +14,6 @@ public class KafkaProducerService {
     KafkaTemplate<String, UserMessage> kafkaTemplate;
 
     public void sendMessage(UserMessage message) {
-        kafkaTemplate.send("ecommerce-order-topic", message);
+        kafkaTemplate.send(Constants.TOPIC_NAME, message);
     }
 }

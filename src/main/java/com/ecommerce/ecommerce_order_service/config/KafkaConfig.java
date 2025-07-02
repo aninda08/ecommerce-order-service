@@ -11,12 +11,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaAdmin;
 
+import com.ecommerce.ecommerce_order_service.constants.Constants;
+
 @Configuration
 public class KafkaConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
-
-    public static final String TOPIC_NAME = "user-topic";
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
@@ -27,9 +27,9 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic userTopic() {
-        return TopicBuilder.name(TOPIC_NAME)
-                .partitions(1)
-                .replicas(1)
+        return TopicBuilder.name(Constants.TOPIC_NAME)
+                .partitions(2)
+                .replicas(2)
                 .build();
     }
 

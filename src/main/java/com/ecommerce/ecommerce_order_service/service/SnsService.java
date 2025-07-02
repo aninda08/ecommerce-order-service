@@ -42,7 +42,6 @@ public class SnsService {
     }
 
     public void publish(String message) {
-        System.out.println("Publishing message to SNS: " + message);
         PublishRequest request = PublishRequest.builder()
                 .topicArn(topicArn)
                 .message(message)
@@ -52,7 +51,6 @@ public class SnsService {
 
     public void publish(OrderRequest message) {
         try {
-            System.out.println("Publishing message to SNS: " + message);
             ObjectMapper mapper = new ObjectMapper();
             String messageBody = mapper.writeValueAsString(message);
             // Generate a unique deduplication ID based on the order ID
@@ -64,7 +62,6 @@ public class SnsService {
                     .messageGroupId(topicGroup)
                     .messageDeduplicationId(messageDeduplicationId)
                     .build();
-            System.out.println("Publishing message to SNS: " + messageBody);
             snsClient.publish(request);
         }
         catch(Exception e) {

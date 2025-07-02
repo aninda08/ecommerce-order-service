@@ -160,11 +160,8 @@ public class SqsService {
         try {
             ObjectMapper mapper = new ObjectMapper();
             List<Message> messages = receivePurchaseOrderDetails();
-            System.out.println("📥 Received messages size: " + messages.size());
             for (Message message : messages) {
-                System.out.println("📥 Received: " + message.body());
                 SNSMessage purchaseOrderDetailsRaw = mapper.readValue(message.body(), SNSMessage.class);
-                System.out.println("📥 Received message: " + purchaseOrderDetailsRaw.getMessage());
                 OrderRequest purchaseOrderDetails = mapper.readValue(purchaseOrderDetailsRaw.getMessage(), OrderRequest.class);
                 // Process the message
                 processPurchaseOrderDetails(purchaseOrderDetails);
