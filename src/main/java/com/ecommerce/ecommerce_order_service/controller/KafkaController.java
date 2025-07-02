@@ -2,7 +2,7 @@ package com.ecommerce.ecommerce_order_service.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ecommerce.ecommerce_order_service.model.UserMessage;
+import com.ecommerce.ecommerce_order_service.model.User;
 import com.ecommerce.ecommerce_order_service.service.KafkaProducerService;
 
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +19,7 @@ public class KafkaController {
     private KafkaProducerService kafkaProducerService;
 
     @PostMapping("/send")
-    public ResponseEntity<String> sendMessage(@RequestBody UserMessage message) {
+    public ResponseEntity<String> sendMessage(@RequestBody User message) {
         kafkaProducerService.sendMessage(message);
         return ResponseEntity.ok("Message sent successfully");
     }

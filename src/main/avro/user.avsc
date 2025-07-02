@@ -1,0 +1,9 @@
+{
+    "type": "record",
+    "name": "User",
+    "namespace": "com.ecommerce.ecommerce_order_service.model",
+    "fields": [
+        {"name": "id", "type": "string"},
+        {"name": "name", "type": "string"}
+    ]
+}

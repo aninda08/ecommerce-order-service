@@ -4,14 +4,13 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 import com.ecommerce.ecommerce_order_service.constants.Constants;
-import com.ecommerce.ecommerce_order_service.model.UserMessage;
+import com.ecommerce.ecommerce_order_service.model.User;
 
 @Component
 public class KafkaConsumerService {
 
     @KafkaListener(topics = Constants.TOPIC_NAME, groupId = Constants.GROUP_ID)
-    public UserMessage listen(UserMessage message) {
+    public void listen(User message) {
         System.out.println("Received message: " + message);
-        return message;
     }
 }
